@@ -2,6 +2,7 @@ package com.app.oudiac.configs;
 
 
 
+import com.app.oudiac.filters.JwtValidationFilter;
 import com.app.oudiac.models.enums.Role;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,8 @@ import io.jsonwebtoken.Jwts;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.List;
 
@@ -39,21 +42,32 @@ public class SecurityConfig {
         return secretKey;
     }
 
+// ...
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtValidationFilter jwtValidationFilter) throws Exception {
 
         http
-                .cors(cors->cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+
+                // 1. MAKE IT STATELESS (Crucial for JWT)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/admin/oudiac/**").hasRole(Role.ADMIN.name())
-//                        .requestMatchers("/api/users/oudiac/**").hasRole(Role.USER.name())
-//                        .requestMatchers("/api/auth/**","/api/users/login","/api/admin/register").permitAll()// allow OTP APIs
-//                        .anyRequest().authenticated()
-                                .anyRequest().permitAll()
+                        // 2. USE hasAuthority() INSTEAD OF hasRole() TO AVOID THE "ROLE_" PREFIX TRAP
+                        .requestMatchers("/api/auth/**", "/api/users/login").permitAll()
+                        .requestMatchers("/api/admin/oudiac/**","/api/stores/oudiac/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/users/oudiac/**").hasAuthority("USER")
+                        .requestMatchers("/api/products/oudiac/**").hasAnyAuthority("ADMIN", "MANAGER")
+
+                        .anyRequest().authenticated()
                 )
-                .formLogin(form -> form.disable()) // disable default login page
-                .httpBasic(basic -> basic.disable()); // disable basic auth
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
+
+                // 3. ADD YOUR JWT FILTER BEFORE THE STANDARD PASSWORD FILTER
+                .addFilterBefore(jwtValidationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

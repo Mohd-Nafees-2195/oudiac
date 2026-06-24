@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class OtpService {
 
-    private final Map<String, OtpData> store = new ConcurrentHashMap<>();
+    private final Map<String, OtpData> cacheStore = new ConcurrentHashMap<>();
 
     @Autowired
     private EmailService emailService;
@@ -36,29 +36,29 @@ public class OtpService {
 
     public void sendOtp(String email) {
 
-        if (!userRepository.existsByEmail(email)) {
-            throw new UserNotFoundException("Please register first!!");
-        }
+//        if (!userRepository.existsByEmail(email)) {
+//            throw new UserNotFoundException("Please register first!!");
+//        }
 
         String otp = generateOtp();
 
         long expiry = System.currentTimeMillis() + 5 * 60 * 1000; // 5 min
 
-        store.put(email, new OtpData(otp, expiry));
+        cacheStore.put(email, new OtpData(otp, expiry));
 
         emailService.sendOtp(email, otp);
     }
 
     public ResponseEntity<String> verifyOtp(String email, String otp) {
 
-        OtpData data = store.get(email);
+        OtpData data = cacheStore.get(email);
 
         if (data == null) {
             throw new RuntimeException("OTP not found");
         }
 
         if (System.currentTimeMillis() > data.getExpiry()) {
-            store.remove(email);
+            cacheStore.remove(email);
             throw new RuntimeException("OTP expired");
         }
 
@@ -70,7 +70,7 @@ public class OtpService {
         user.get().setEmailStatus(EmailStatus.VERIFIED);
         userRepository.save(user.get());
 
-        store.remove(email);
+        cacheStore.remove(email);
 
         //Generate the JWT token
         String token=jwtService.generateJwtToken(user.get());
@@ -84,4 +84,5 @@ public class OtpService {
     private String generateOtp() {
         return String.valueOf(100000 + new Random().nextInt(900000));
     }
+
 }

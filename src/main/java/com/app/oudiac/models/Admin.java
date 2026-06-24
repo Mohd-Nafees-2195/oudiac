@@ -7,10 +7,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "user_tbl")
+@Table(name = "admin_tbl")
 @Getter
 @Setter
-public class User extends BaseModel{
+public class Admin extends BaseModel{
     private String name;
 
     @Column(unique = true)
@@ -18,11 +18,11 @@ public class User extends BaseModel{
 
     @Column(unique = true)
     private String mobileNumber;
-//    private String password;
+    private String password;
 
     @Enumerated(value = EnumType.STRING)
     private EmailStatus emailStatus;
 
-    @Enumerated(value = EnumType.ORDINAL)
+    @Enumerated(value = EnumType.STRING)
     private Role role;
 }

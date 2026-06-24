@@ -4,8 +4,10 @@ import com.app.oudiac.configs.SupabaseConfig.S3Properties;
 import com.app.oudiac.dtos.storeDtos.StoreRequestDto;
 import com.app.oudiac.dtos.storeDtos.StoreResponseDto;
 import com.app.oudiac.exceptions.UserNotFoundException;
+import com.app.oudiac.models.Admin;
 import com.app.oudiac.models.Store;
 import com.app.oudiac.models.User;
+import com.app.oudiac.repositories.AdminRepository;
 import com.app.oudiac.repositories.StoreRepository;
 import com.app.oudiac.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +30,7 @@ import java.util.Optional;
 public class StoreService implements IStoreService{
 
     private final StoreRepository storeRepository;
-    private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
 
     private final S3Client s3Client;
     private final S3Properties properties;
@@ -38,7 +40,7 @@ public class StoreService implements IStoreService{
 
     @Override
     public ResponseEntity<StoreResponseDto> addStore(StoreRequestDto requestDto, MultipartFile[] files) throws IOException {
-        Optional<User> userOptional=userRepository.findByEmail(requestDto.getManagerEmail());
+        Optional<Admin> userOptional=adminRepository.findByEmail(requestDto.getManagerEmail());
 
         if(userOptional.isEmpty()){
             throw new UserNotFoundException("Manager not exist!! Please enter correct email");

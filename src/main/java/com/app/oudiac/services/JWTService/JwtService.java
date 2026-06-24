@@ -1,5 +1,6 @@
 package com.app.oudiac.services.JWTService;
 
+import com.app.oudiac.models.Admin;
 import com.app.oudiac.models.User;
 import com.app.oudiac.utils.ConstantUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,22 +27,23 @@ public class JwtService {
 
     public String generateJwtToken(User user){
         Map<String,Object> payload = new HashMap<>();
-        Long nowInMillis = System.currentTimeMillis();
-        payload.put("iat",new Date(nowInMillis));
-        payload.put("exp",new Date(nowInMillis + ConstantUtils.JWT_TOKEN_EXPIRATION_TIME));
         payload.put("userId",user.getId());
-        payload.put("iss","scaler");
+        payload.put("iss","Oudiac");
+        payload.put("userName",user.getName());
         payload.put("scope",user.getRole());
+        payload.put("email",user.getEmail());
+        payload.put("mob",user.getMobileNumber());
+        payload.put("role",user.getRole());
 
-        return Jwts.builder().claims(payload).signWith(secretKey).compact();
+        return Jwts.builder().claims(payload)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + ConstantUtils.JWT_TOKEN_EXPIRATION_TIME))
+                .signWith(secretKey).compact();
     }
-    public Boolean validateToken(String token,Long userId) {
+    public Boolean validateToken(String token) {
 
         try{
-            JwtParser jwtParser = Jwts.parser().verifyWith(secretKey).build();
-            Claims claims = jwtParser.parseSignedClaims(token).getPayload();
-
-            Date tokenExpiry =(Date) claims.get("exp");
+            Claims claims =getClaims(token);
 
             Date expiration = claims.getExpiration();
 
@@ -49,10 +51,30 @@ public class JwtService {
                 throw new InvalidOneTimeTokenException("Token has expired!!");
             }
 
-            System.out.println(tokenExpiry);
+//            System.out.println(tokenExpiry);
             return true;
         } catch (RuntimeException e) {
             throw new RuntimeException(e.getMessage());
         }
+    }
+    public String generateJwtTokenForAdmin(Admin user){
+        Map<String,Object> payload = new HashMap<>();
+        payload.put("userId",user.getId());
+        payload.put("iss","Oudiac");
+        payload.put("userName",user.getName());
+        payload.put("scope",user.getRole());
+        payload.put("email",user.getEmail());
+        payload.put("mob",user.getMobileNumber());
+        payload.put("role",user.getRole());
+
+        return Jwts.builder().claims(payload)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + ConstantUtils.JWT_TOKEN_EXPIRATION_TIME_ADMIN))
+                .signWith(secretKey).compact();
+    }
+
+    public Claims getClaims(String token) {
+        JwtParser jwtParser = Jwts.parser().verifyWith(secretKey).build();
+        return jwtParser.parseSignedClaims(token).getPayload();
     }
 }

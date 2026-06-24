@@ -1,5 +1,6 @@
 package com.app.oudiac.controllers;
 
+import com.app.oudiac.dtos.userDtos.AdminUserLoginRequestDto;
 import com.app.oudiac.dtos.userDtos.UserRegisterRequestDto;
 import com.app.oudiac.dtos.userDtos.UserRegisterResponseDto;
 import com.app.oudiac.services.adminService.AdminService;
@@ -19,11 +20,11 @@ public class AdminController {
     private AdminService adminService;
 
     // Create Admin
-    @PostMapping("/oudiac/register-admin")   //This mapping is for loging and signup both
+    @PostMapping("/oudiac/register-admin")
     public ResponseEntity<UserRegisterResponseDto> createAdmin(@Valid @RequestBody UserRegisterRequestDto request) {
         return adminService.registerAdmin(request);
     }
-    @PostMapping("/oudiac/register-manager")   //This mapping is for loging and signup both
+    @PostMapping("/oudiac/register-manager")
     public ResponseEntity<UserRegisterResponseDto> createManager(@Valid @RequestBody UserRegisterRequestDto request) {
         return adminService.registerManager(request);
     }

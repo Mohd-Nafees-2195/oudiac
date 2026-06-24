@@ -7,16 +7,21 @@ import com.app.oudiac.dtos.userDtos.UserRegisterResponseDto;
 import com.app.oudiac.exceptions.UserAlreadyExitException;
 import com.app.oudiac.exceptions.UserNotFoundException;
 import com.app.oudiac.models.User;
+import com.app.oudiac.models.enums.EmailStatus;
 import com.app.oudiac.models.enums.Role;
 import com.app.oudiac.repositories.UserRepository;
+import com.app.oudiac.services.JWTService.JwtService;
 import com.app.oudiac.services.emailOtpService.OtpService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.util.Optional;
 
@@ -29,8 +34,7 @@ public class UserService {
     private OtpService otpService;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
-
+    private JwtService jwtService;
 
     public ResponseEntity<String> login(UserLoginRequestDto request) {
 
@@ -42,7 +46,15 @@ public class UserService {
              userRepository.save(newUser);
         }
         //Send OTP
-        otpService.sendOtp(request.getEmail());
+        if(userOptional.get().getEmailStatus()== EmailStatus.NOT_VERIFIED){
+            otpService.sendOtp(request.getEmail());
+        }else {
+            //Create JWT Token only
+            String token=jwtService.generateJwtToken(userOptional.get());
+            MultiValueMap<String,String> headers = new LinkedMultiValueMap<>();
+            headers.add(HttpHeaders.SET_COOKIE,"jwt="+token);
+            return new ResponseEntity<>("OTP has been sent to "+request.getEmail(),headers ,HttpStatus.OK);
+        }
         return new ResponseEntity<>("OTP has been sent to "+request.getEmail(), HttpStatus.OK);
     }
 

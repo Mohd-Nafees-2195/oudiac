@@ -1,12 +1,11 @@
 package com.app.oudiac.models;
 
 import com.app.oudiac.models.enums.StoreStatus;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -26,7 +25,7 @@ public class Store extends BaseModel{
     private Double longitude;
 
     @ManyToOne
-    private User manager;
+    private Admin manager;
 
     private String phone;
     @Enumerated(value = EnumType.STRING)
@@ -34,6 +33,8 @@ public class Store extends BaseModel{
     private String storeSku;
     private String storeImageUrl;
 
+    @ManyToMany(mappedBy = "stores")
+    List<ProductVariant> products;
 //    ordersToday: 845,
 //    revenueToday: "₹1.2L",
 }

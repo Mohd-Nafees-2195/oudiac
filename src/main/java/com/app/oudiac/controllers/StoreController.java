@@ -22,7 +22,7 @@ public class StoreController {
 
     private final StoreService storeService;
 
-    @PostMapping(value = "/admin/oudiac/add",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/oudiac/add",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StoreResponseDto> addStore(@Valid @ModelAttribute StoreRequestDto requestDto, @RequestParam("images") MultipartFile[] images){
         try{
             return storeService.addStore(requestDto,images);
