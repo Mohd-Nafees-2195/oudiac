@@ -25,4 +25,8 @@ public class Admin extends BaseModel{
 
     @Enumerated(value = EnumType.STRING)
     private Role role;
+
+    @OneToOne(optional = true)
+    @JoinColumn(name = "store_id", nullable = true)
+    private Store store;
 }

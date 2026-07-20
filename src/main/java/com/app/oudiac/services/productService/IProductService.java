@@ -13,4 +13,8 @@ public interface IProductService {
     ResponseEntity<ProductResponseDto> addProduct(ProductRequestDto requestDto, MultipartFile[] files) throws IOException;
 
     Page<ProductResponseDto> getProducts(Integer page, Integer size);
+
+    ResponseEntity<ProductResponseDto> findById(Long id);
+
+    ResponseEntity<ProductResponseDto> findByCategoryId(Long id);
 }

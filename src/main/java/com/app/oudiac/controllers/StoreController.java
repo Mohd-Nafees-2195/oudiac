@@ -33,7 +33,7 @@ public class StoreController {
 
     // /api/stores/admin/oudiac/get-stores
     // /api/admin/oudiac/get-stores
-    @GetMapping("/admin/oudiac/get-stores")
+    @GetMapping("/oudiac/get-stores")
     public ResponseEntity<List<StoreResponseDto>> getStores(){
         return storeService.getStores();
     }

@@ -2,17 +2,19 @@ package com.app.oudiac.dtos.productDtos;
 
 import com.app.oudiac.dtos.brandDtos.BrandRequestDto;
 import com.app.oudiac.dtos.categoryDtos.CategoryRequestDto;
-import com.app.oudiac.models.Brand;
+import com.app.oudiac.dtos.productTypeDtos.ProductTypeRequestDto;
+import com.app.oudiac.dtos.productVariantRequestDto.ProductVariantReqDto;
 import com.app.oudiac.models.Product;
 import com.app.oudiac.models.ProductVariant;
 import com.app.oudiac.models.enums.ProductStatus;
-import com.app.oudiac.models.enums.ProductType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class ProductRequestDto {
@@ -24,73 +26,50 @@ public class ProductRequestDto {
     private String description;
 
     @NotNull
-    private BigDecimal sellingPrice;
-
-    @NotNull
-    private BigDecimal MRP;
-
-    @NotNull
-    private String sku;
-
-    @NotNull
-    private Long quantity;
-
-//    @NotNull
-//    private String imageUrl;
-
-    @NotNull
     private ProductStatus productStatus;
 
     @NotNull
-    private String variantType;  //100ml, 50 ml
-
-//    @NotBlank(message = "Brand is required")
-    private String brandName;
-
-//    @NotBlank(message = "Category is required")
-    private String categoryName;
+    private Long brandId;
 
     @NotNull
-    private ProductType productType;  //Attar , Bhakhoon
+    private Long categoryId;
+
+    @NotNull
+    private Long productTypeId;  //Attar , Bhakhoon
 
 //    @NotBlank(message = "Fragrance family is required")
     private String fragranceFamily;
 
-    public static ProductVariant fromProductRequestDtoToProductVariant(ProductRequestDto requestDto) {
+    @NotNull
+    private Long storeId;
+
+  List<ProductVariantReqDto> productVariants;
+
+    public static Product fromProductRequestDtoToProductVariant(ProductRequestDto requestDto) {
         Product newProduct=new Product();
         newProduct.setName(requestDto.getName());
         newProduct.setDescription(requestDto.getDescription());
-
-        BrandRequestDto brandRequestDto=new BrandRequestDto();
-        brandRequestDto.setName(requestDto.getBrandName());
-        newProduct.setBrand(BrandRequestDto.fromBrandRequestDtoBrand(brandRequestDto));
-
-        CategoryRequestDto categoryRequestDto=new CategoryRequestDto();
-        categoryRequestDto.setName(requestDto.getCategoryName());
-        newProduct.setCategory(CategoryRequestDto.fromCategoryRequestDtoToCategory(categoryRequestDto));
-
-        newProduct.setProductType(requestDto.getProductType());
         newProduct.setFragranceFamily(requestDto.getFragranceFamily());
+        newProduct.setProductStatus(requestDto.getProductStatus());
 
         Date date=new Date();
         newProduct.setCreated_at(date);
         newProduct.setUpdated_at(date);
         newProduct.setIsDeleted(false);
 
-        ProductVariant newProductVariant=new ProductVariant();
-        newProductVariant.setProduct(newProduct);
-        newProductVariant.setProductStatus(requestDto.getProductStatus());
-        newProductVariant.setSku(requestDto.getSku());
-        newProductVariant.setMRP(requestDto.getMRP());
-        newProductVariant.setSellingPrice(requestDto.getSellingPrice());
+//        newProductVariant.setProduct(newProduct);
+//
+//        newProductVariant.setSku(requestDto.getSku());
+//        newProductVariant.setMRP(requestDto.getMRP());
+//        newProductVariant.setSellingPrice(requestDto.getSellingPrice());
+//
+//        newProductVariant.setVariantType(requestDto.getVariantType());
+//        newProductVariant.setStock(requestDto.getQuantity());
+//
+//        newProductVariant.setCreated_at(date);
+//        newProductVariant.setUpdated_at(date);
+//        newProductVariant.setIsDeleted(false);
 
-        newProductVariant.setVariantType(requestDto.getVariantType());
-        newProductVariant.setStock(requestDto.getQuantity());
-
-        newProductVariant.setCreated_at(date);
-        newProductVariant.setUpdated_at(date);
-        newProductVariant.setIsDeleted(false);
-
-        return newProductVariant;
+        return newProduct;
     }
 }

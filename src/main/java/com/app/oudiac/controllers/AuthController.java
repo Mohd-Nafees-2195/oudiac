@@ -22,17 +22,22 @@ public class AuthController {
 
     @PostMapping("/send-email-otp")
     public ResponseEntity<String> sendOtp(@Valid @RequestBody EmailOTPRequestDto request) {
-        otpService.sendOtp(request.getEmail());
+        authService.sendOtp(request);
         return new ResponseEntity<>("OTP sent to "+request.getEmail(), HttpStatus.OK);
     }
 
-    @PostMapping("/verify-email-otp")
-    public ResponseEntity<String> verifyOtp(@RequestParam String email,
+    @PostMapping("/verify-email-admin-otp")
+    public ResponseEntity<String> verifyAminOtp(@RequestParam String email,
                                                  @RequestParam String otp) {
-        return otpService.verifyOtp(email, otp);
+        return authService.verifyAdminOtp(email,otp);
+    }
+    @PostMapping("/verify-email-user-otp")
+    public ResponseEntity<String> verifyUserOtp(@RequestParam String email,
+                                                @RequestParam String otp) {
+        return authService.verifyUserOtp(email,otp);
     }
     @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@Valid @RequestBody AdminUserLoginRequestDto request) {
-        return authService.login(request);
+    public ResponseEntity<String> adminLogin(@Valid @RequestBody AdminUserLoginRequestDto request) {
+        return authService.adminLogin(request);
     }
 }

@@ -56,10 +56,10 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         // 2. USE hasAuthority() INSTEAD OF hasRole() TO AVOID THE "ROLE_" PREFIX TRAP
-                        .requestMatchers("/api/auth/**", "/api/users/login").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/users/login","/api/admin/oudiac/register-admin","/api/products/public/**","/api/category/public/**","/api/payment/webhook").permitAll()
                         .requestMatchers("/api/admin/oudiac/**","/api/stores/oudiac/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/users/oudiac/**").hasAuthority("USER")
-                        .requestMatchers("/api/products/oudiac/**").hasAnyAuthority("ADMIN", "MANAGER")
+                        .requestMatchers("/api/users/oudiac/**","/api/orders/oudiac/**","/api/payment/oudiac/**").hasAuthority("USER")
+                        .requestMatchers("/api/products/oudiac/**","/api/category/oudiac/**","/api/brand/oudiac/**","/api/product-type/oudiac/**").hasAnyAuthority("ADMIN", "MANAGER")
 
                         .anyRequest().authenticated()
                 )

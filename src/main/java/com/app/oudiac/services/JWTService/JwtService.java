@@ -25,7 +25,7 @@ public class JwtService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public String generateJwtToken(User user){
+    public String generateJwtTokenForUser(User user){
         Map<String,Object> payload = new HashMap<>();
         payload.put("userId",user.getId());
         payload.put("iss","Oudiac");
@@ -40,7 +40,7 @@ public class JwtService {
                 .expiration(new Date(System.currentTimeMillis() + ConstantUtils.JWT_TOKEN_EXPIRATION_TIME))
                 .signWith(secretKey).compact();
     }
-    public Boolean validateToken(String token) {
+    public Boolean validateToken(String token) throws RuntimeException {
 
         try{
             Claims claims =getClaims(token);
@@ -73,7 +73,7 @@ public class JwtService {
                 .signWith(secretKey).compact();
     }
 
-    public Claims getClaims(String token) {
+    public Claims getClaims(String token) throws RuntimeException{
         JwtParser jwtParser = Jwts.parser().verifyWith(secretKey).build();
         return jwtParser.parseSignedClaims(token).getPayload();
     }

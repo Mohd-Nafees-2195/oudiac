@@ -10,6 +10,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Brand extends BaseModel {
-    @Column(unique = true)
+
     private String name;
+    @Column(unique = true)
+    private String code;
 }

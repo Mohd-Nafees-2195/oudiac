@@ -1,6 +1,7 @@
 package com.app.oudiac.dtos.userDtos;
 
 import com.app.oudiac.models.User;
+import com.app.oudiac.models.enums.EmailStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -15,6 +16,7 @@ public class UserLoginRequestDto {
     public static User fromUserUserLoginRequestDtoUser(@Valid UserLoginRequestDto request) {
         User newUser=new User();
         newUser.setEmail(request.getEmail());
+        newUser.setEmailStatus(EmailStatus.NOT_VERIFIED);
         return newUser;
     }
 }

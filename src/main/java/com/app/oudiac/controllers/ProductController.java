@@ -37,8 +37,17 @@ public class ProductController {
                                      @RequestParam(defaultValue = "5") int size){
         return productService.getProducts(page,size);
     }
-//    @GetMapping("/oudiac/getall")
-//    public Page<Product> getAllProducts(){
-//        return productService.getAllProducts();
-//    }
+    @GetMapping("/public/getall")
+    public Page<ProductResponseDto> getPublicProducts(@RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(defaultValue = "5") int size){
+        return productService.getProducts(page,size);
+    }
+    @GetMapping("/public/get-by-id/{id}")
+    public ResponseEntity<ProductResponseDto> getPublicProduct(@PathVariable Long id){
+        return productService.findById(id);
+    }
+    @GetMapping("/public/get-by-categoryId/{id}")
+    public ResponseEntity<ProductResponseDto> getPublicProductByCategoryId(@PathVariable Long id){
+        return productService.findByCategoryId(id);
+    }
 }
