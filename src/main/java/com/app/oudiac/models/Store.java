@@ -34,7 +34,7 @@ public class Store extends BaseModel{
     private String storeImageUrl;
 
     @ManyToMany(mappedBy = "stores")
-    List<ProductVariant> products;
+    List<Product> products;
 //    ordersToday: 845,
 //    revenueToday: "₹1.2L",
 }

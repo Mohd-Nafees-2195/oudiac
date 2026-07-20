@@ -2,6 +2,7 @@ package com.app.oudiac.dtos.userDtos;
 
 import com.app.oudiac.models.Admin;
 import com.app.oudiac.models.User;
+import com.app.oudiac.models.enums.EmailStatus;
 import com.app.oudiac.models.enums.Role;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -32,22 +33,26 @@ public class UserRegisterRequestDto {
     )
     private String password;
 
-    public static User fromUserRegisterRequestDtoToUser(UserRegisterRequestDto requestDto){
-        User user=new User();
-        user.setEmail(requestDto.getEmail());
-        user.setName(requestDto.getName());
-        user.setMobileNumber(requestDto.getMobileNumber());
-        user.setCreated_at(new Date());
-        user.setUpdated_at(new Date());
-        user.setIsDeleted(false);
-        return user;
-    }
+    private Long storeId;
+
+//    public static User fromUserRegisterRequestDtoToUser(UserRegisterRequestDto requestDto){
+//        User user=new User();
+//        user.setEmail(requestDto.getEmail());
+//        user.setName(requestDto.getName());
+//        user.setMobileNumber(requestDto.getMobileNumber());
+//        user.setEmailStatus(EmailStatus.NOT_VERIFIED);
+//        user.setCreated_at(new Date());
+//        user.setUpdated_at(new Date());
+//        user.setIsDeleted(false);
+//        return user;
+//    }
 
     public static Admin fromUserRegisterRequestDtoToAdmin(UserRegisterRequestDto requestDto){
         Admin user=new Admin();
         user.setEmail(requestDto.getEmail());
         user.setName(requestDto.getName());
         user.setMobileNumber(requestDto.getMobileNumber());
+        user.setEmailStatus(EmailStatus.NOT_VERIFIED);
         user.setCreated_at(new Date());
         user.setUpdated_at(new Date());
         user.setIsDeleted(false);

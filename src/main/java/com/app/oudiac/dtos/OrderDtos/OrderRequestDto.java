@@ -9,15 +9,11 @@ import java.util.List;
 
 @Data
 public class OrderRequestDto {
-    @NotNull
-    private String shippingAddress;
 
     @NotNull
-    private PaymentMethod paymentMethod;
+    private Long addressId;
 
-    private String notes;
-
-    @NotEmpty
+    @NotEmpty(message = "Order must contain at least one item")
     private List<OrderItemDTO> items;
 
 }

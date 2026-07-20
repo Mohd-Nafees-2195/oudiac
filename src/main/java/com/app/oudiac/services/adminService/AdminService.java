@@ -3,13 +3,16 @@ package com.app.oudiac.services.adminService;
 import com.app.oudiac.dtos.userDtos.AdminUserLoginRequestDto;
 import com.app.oudiac.dtos.userDtos.UserRegisterRequestDto;
 import com.app.oudiac.dtos.userDtos.UserRegisterResponseDto;
+import com.app.oudiac.exceptions.StoreNotFoundException;
 import com.app.oudiac.exceptions.UserAlreadyExitException;
 import com.app.oudiac.exceptions.UserNotFoundException;
 import com.app.oudiac.models.Admin;
+import com.app.oudiac.models.Store;
 import com.app.oudiac.models.User;
 import com.app.oudiac.models.enums.EmailStatus;
 import com.app.oudiac.models.enums.Role;
 import com.app.oudiac.repositories.AdminRepository;
+import com.app.oudiac.repositories.StoreRepository;
 import com.app.oudiac.repositories.UserRepository;
 import com.app.oudiac.services.JWTService.JwtService;
 import com.app.oudiac.services.emailOtpService.OtpService;
@@ -36,7 +39,7 @@ public class AdminService {
     private final AdminRepository adminRepository;
 
     private final OtpService otpService;
-    private final JwtService jwtService;
+    private final StoreRepository storeRepository;
 
     private final PasswordEncoder bCryptPasswordEncoder;
 
@@ -67,9 +70,16 @@ public class AdminService {
             throw new UserAlreadyExitException("Email already in use");
         }
 
+        Optional<Store> store=storeRepository.findById(user.getStoreId());
+
+        if(store.isEmpty()){
+            throw new StoreNotFoundException("Please Add StoreFirst");
+        }
+
         Admin newUser=UserRegisterRequestDto.fromUserRegisterRequestDtoToAdmin(user);
         newUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         newUser.setRole(Role.MANAGER);
+        newUser.setStore(store.get());
 
         adminRepository.save(newUser);
 
@@ -87,5 +97,9 @@ public class AdminService {
             response.add(UserRegisterResponseDto.convertFromAdmin(user));
         }
         return new ResponseEntity<>(response,HttpStatus.OK);
+    }
+    public Admin getById(Long id) {
+        return adminRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 }

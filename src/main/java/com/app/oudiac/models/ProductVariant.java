@@ -13,7 +13,7 @@ import java.util.List;
 @Setter
 public class ProductVariant extends BaseModel {
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id")
     private Product product;
 
@@ -23,18 +23,7 @@ public class ProductVariant extends BaseModel {
     private BigDecimal MRP;
     private Long stock;
 
-    @Enumerated(value = EnumType.STRING)
-    private ProductStatus productStatus;
-
     @Column(unique = true, nullable = false)
     private String sku;  //Stock keeping unit
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "product_store",
-            joinColumns = @JoinColumn(name = "product_varient_id"),
-            inverseJoinColumns = @JoinColumn(name = "store_id")
-    )
-    List<Store> stores;
 
 }

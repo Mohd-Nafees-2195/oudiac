@@ -9,6 +9,9 @@ public class OrderItemDTO {
     @NotNull
     private Long productId;
 
-    @Min(1)
-    private int quantity;
+    @NotNull
+    private Long variantId; // e.g., "50ml"
+
+    @NotNull
+    private Integer quantity;
 }

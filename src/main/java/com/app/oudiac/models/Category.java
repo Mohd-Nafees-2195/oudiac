@@ -10,6 +10,7 @@ import lombok.Setter;
 @Setter
 public class Category extends BaseModel{
 
-    @Column(unique = true)
     private String name;
+    @Column(unique = true)
+    private String code;
 }

@@ -1,6 +1,10 @@
 package com.app.oudiac.filters;
 
+import com.app.oudiac.models.Admin;
+import com.app.oudiac.models.User;
 import com.app.oudiac.services.JWTService.JwtService;
+import com.app.oudiac.services.adminService.AdminService;
+import com.app.oudiac.services.userService.UserService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -17,17 +22,28 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import javax.security.sasl.AuthenticationException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class JwtValidationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserService userService;
+    private final AdminService adminService;
 
     // 1. Define the endpoints you want to skip
     private static final List<String> EXCLUDED_URLS = List.of(
-            "/api/auth",
-            "/api/users/login"
+            "/api/auth/send-email-otp",
+            "/api/auth/verify-email-admin-otp",
+            "/api/auth/verify-email-user-otp",
+            "/api/auth/login",
+            "/api/users/login",
+            "/api/products/public/get-by-id/{id}",
+            "/api/products/public/get-by-categoryId/{id}",
+            "/api/admin/oudiac/register-admin",
+            "/api/payment/webhook"
     );
 
     @Override
@@ -57,7 +73,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            System.out.println(token);
+//            System.out.println(token);
             // 6. VALIDATE YOUR TOKEN HERE
             // Example: jwtService.validateToken(token);
             // If the token is expired or altered, your JWT library should throw an exception.
@@ -69,13 +85,12 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 
                 // Extract username and roles from your token
                 Claims claims=jwtService.getClaims(token);
-                String username = String.valueOf(claims.get("userName"));
+                String username = String.valueOf(claims.get("email"));
                 String role = String.valueOf(claims.get("role")); // e.g., "ADMIN" or "MANAGER"
+                Long id=Long.valueOf(claims.get("userId").toString());
                 System.out.println(username+" - "+role);
                 // Convert the role string into a GrantedAuthority
                 List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
-
-                // Create the Authentication object
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         username,
                         null, // Credentials (usually null for JWT)
@@ -83,10 +98,41 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                 );
 
                 // Optional: Attach request details (like IP address) to the token
-                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 // 3. Hand the authentication over to Spring Security!
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                //Below code is to add full object of user in auth context
+//                if(Objects.equals(role, "USER")){
+//                    User userDetails = userService.getById(id);
+//                    // Create the Authentication object
+//                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+//                            userDetails,
+//                            null, // Credentials (usually null for JWT)
+//                            authorities
+//                    );
+//
+//                    // Optional: Attach request details (like IP address) to the token
+//                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//
+//                    // 3. Hand the authentication over to Spring Security!
+//                    SecurityContextHolder.getContext().setAuthentication(authToken);
+//                }else{
+//                    Admin userDetails = adminService.getById(id);
+//                    // Create the Authentication object
+//                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+//                            userDetails,
+//                            null, // Credentials (usually null for JWT)
+//                            authorities
+//                    );
+//
+//                    // Optional: Attach request details (like IP address) to the token
+//                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//
+//                    // 3. Hand the authentication over to Spring Security!
+//                    SecurityContextHolder.getContext().setAuthentication(authToken);
+//                }
             }
 
             filterChain.doFilter(request, response);
