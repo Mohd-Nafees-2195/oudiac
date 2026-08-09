@@ -3,6 +3,7 @@ package com.app.oudiac.services.orderService;
 import com.app.oudiac.dtos.OrderDtos.OrderItemDTO;
 import com.app.oudiac.dtos.OrderDtos.OrderRequestDto;
 import com.app.oudiac.dtos.OrderDtos.OrderResponseDto;
+import com.app.oudiac.dtos.productDtos.ProductResponseDto;
 import com.app.oudiac.exceptions.*;
 import com.app.oudiac.models.*;
 import com.app.oudiac.models.enums.OrderStatus;
@@ -15,6 +16,8 @@ import com.app.oudiac.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -179,6 +182,11 @@ public class OrderService {
         }
         OrderResponseDto response=OrderResponseDto.from(order.get());
         return new ResponseEntity<>(response,HttpStatus.OK);
+    }
+
+    public Page<OrderResponseDto> getOrders(int page, int size, Principal principal) {
+        Page<Order> orders=orderRepository.findAll(PageRequest.of(page, size));
+        return orders.map(OrderResponseDto::from);
     }
 
     // Automatically generate the public Order ID

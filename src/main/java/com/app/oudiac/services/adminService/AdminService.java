@@ -70,16 +70,16 @@ public class AdminService {
             throw new UserAlreadyExitException("Email already in use");
         }
 
-        Optional<Store> store=storeRepository.findById(user.getStoreId());
-
-        if(store.isEmpty()){
-            throw new StoreNotFoundException("Please Add StoreFirst");
-        }
+//        Optional<Store> store=storeRepository.findById(user.getStoreId());
+//
+//        if(store.isEmpty()){
+//            throw new StoreNotFoundException("Please Add StoreFirst");
+//        }
 
         Admin newUser=UserRegisterRequestDto.fromUserRegisterRequestDtoToAdmin(user);
         newUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         newUser.setRole(Role.MANAGER);
-        newUser.setStore(store.get());
+//        newUser.setStore(store.get());
 
         adminRepository.save(newUser);
 
