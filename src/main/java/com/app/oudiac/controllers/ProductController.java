@@ -31,7 +31,6 @@ public class ProductController {
         }
     }
 
-//    start with getProducts with Pagination
     @GetMapping("/oudiac/get-products")
     public Page<ProductResponseDto> getProducts(@RequestParam(defaultValue = "0") int page,
                                      @RequestParam(defaultValue = "5") int size){

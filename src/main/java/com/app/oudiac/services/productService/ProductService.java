@@ -133,7 +133,7 @@ public class ProductService implements IProductService{
 
     @Override
     public Page<ProductResponseDto> getProducts(Integer page, Integer size) {
-        Page<Product> productPage = productRepository.findAll(PageRequest.of(page, size));
+        Page<Product> productPage = productRepository.findAllProducts(PageRequest.of(page, size));
         return productPage.map(ProductResponseDto::fromProductToProductResponseDto);
     }
 

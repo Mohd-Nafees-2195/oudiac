@@ -1,12 +1,15 @@
 package com.app.oudiac.dtos.OrderDtos;
 
 import com.app.oudiac.models.Order;
+import com.app.oudiac.models.OrderItem;
 import com.app.oudiac.models.enums.OrderStatus;
 import com.app.oudiac.models.enums.PaymentStatus;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class OrderResponseDto {
@@ -15,7 +18,7 @@ public class OrderResponseDto {
     private String orderId; //RazorPay Order Id
     private String customer;
     private String phone;
-    private Long items;
+    private List<OrderItemResponseDto> orderItems;
     private OrderStatus orderStatus;
     private BigDecimal totalPrice;
     private Date date;
@@ -40,7 +43,11 @@ public class OrderResponseDto {
 
         orderResponseDto.setCustomer(order.getShippingName());
         orderResponseDto.setPhone(order.getShippingPhone());
-        orderResponseDto.setItems(5L);// currently total item not saving into order table, please chang the code while ordering save item count as well
+        List<OrderItemResponseDto> orderItemsDto=new ArrayList<>();
+        for(OrderItem orderItem: order.getItems()){
+            orderItemsDto.add(OrderItemResponseDto.fromOrderItem(orderItem));
+        }
+        orderResponseDto.setOrderItems(orderItemsDto);
         orderResponseDto.setDate(order.getCreated_at());
         orderResponseDto.setPayment(order.getPaymentStatus());
         return orderResponseDto;

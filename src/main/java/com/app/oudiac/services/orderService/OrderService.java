@@ -49,6 +49,7 @@ public class OrderService {
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
+        //Prevent duplicate orders
         Optional<Order> ordered = orderRepository.findByIdempotencyKey(idempotencyKey);
         if(ordered.isPresent()) {
             throw new ItemAlreadyExitException("Order already exists");
@@ -70,7 +71,7 @@ public class OrderService {
             }
 
 //            List<Store> stores=product.get().getStores();
-
+            //Filter varient
             ProductVariant productVariant = product.get().getProductVariants()
                     .stream()
                     .filter(variant -> Objects.equals(variant.getId(), itemDTO.getVariantId()))
@@ -82,6 +83,7 @@ public class OrderService {
 
 
             OrderItem item = new OrderItem();
+            item.setUrl(product.get().getImageUrl());
             item.setProductVariant(productVariant);
             item.setQuantity(itemDTO.getQuantity());
 
@@ -193,5 +195,14 @@ public class OrderService {
     private String generateCustomOrderNumber() {
         return "OUD-" + java.time.Year.now().getValue() + "-" +
                 java.util.UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+    }
+
+    public Page<OrderResponseDto> getOrdersByUserId(int page, int size, Principal principal) {
+        Optional<User> user = userRepository.findByEmail(principal.getName());
+        if(user.isEmpty()){
+            throw new UserNotFoundException("User not found");
+        }
+        Page<Order> orders=orderRepository.findByUserId(user.get().getId(),PageRequest.of(page, size));
+        return orders.map(OrderResponseDto::from);
     }
 }

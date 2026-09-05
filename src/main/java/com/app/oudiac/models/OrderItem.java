@@ -42,4 +42,6 @@ public class OrderItem extends BaseModel {
 
     @Column(nullable = false)
     private int quantity;
+
+    private String url;
 }
