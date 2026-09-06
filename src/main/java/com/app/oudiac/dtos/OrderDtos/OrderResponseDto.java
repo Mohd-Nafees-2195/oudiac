@@ -24,15 +24,6 @@ public class OrderResponseDto {
     private Date date;
     private PaymentStatus payment;
 
-
-//    customer: "Anita Desai",
-//    phone: "+91 98765 43215",
-//    items: 4,
-//    amount: 620,
-//    date: "Yesterday, 08:30 PM",
-//    status: "Delivered",
-//    payment: "COD",
-
     public static OrderResponseDto from(Order order) {
         OrderResponseDto orderResponseDto = new OrderResponseDto();
         orderResponseDto.setId(order.getId());

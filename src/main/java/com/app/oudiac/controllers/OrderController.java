@@ -46,17 +46,26 @@ public class OrderController {
         return orderService.getOrder(orderNumber,principal);
     }
 
+    @GetMapping("/get-order/{id}")
+    public Page<OrderResponseDto> getOrdersByUserId(@RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "5") int size,
+                                                    Principal principal) {
+        return orderService.getOrdersByUserId(page,size,principal);
+    }
+
+    //Accessible by manager only
     @GetMapping("/manager/get-orders")
     public Page<OrderResponseDto> getOrders(@RequestParam(defaultValue = "0") int page,
                                                   @RequestParam(defaultValue = "5") int size,
                                                   Principal principal) {
-        System.out.println("getOrder");
         return orderService.getOrders(page,size,principal);
     }
-    @GetMapping("/get-order/{id}")
-    public Page<OrderResponseDto> getOrdersByUserId(@RequestParam(defaultValue = "0") int page,
+
+    @GetMapping("/manager/get-curr-orders")
+    public Page<OrderResponseDto> getCurrentDayOrders(@RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "5") int size,
                                             Principal principal) {
-        return orderService.getOrdersByUserId(page,size,principal);
+        return orderService.getCurrDayOrders(page,size,principal);
     }
+
 }

@@ -25,10 +25,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -203,6 +202,24 @@ public class OrderService {
             throw new UserNotFoundException("User not found");
         }
         Page<Order> orders=orderRepository.findByUserId(user.get().getId(),PageRequest.of(page, size));
+        return orders.map(OrderResponseDto::from);
+    }
+
+
+    public Page<OrderResponseDto> getCurrDayOrders(int page, int size, Principal principal) {
+        LocalDate today = LocalDate.now();
+
+        Date startOfDay = Date.from(
+                today.atStartOfDay(ZoneId.systemDefault()).toInstant()
+        );
+
+        Date startOfNextDay = Date.from(
+                today.plusDays(1)
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+        );
+
+        Page<Order> orders=orderRepository.findCurrDayOrders(startOfDay,startOfNextDay,PageRequest.of(page, size));
         return orders.map(OrderResponseDto::from);
     }
 }
