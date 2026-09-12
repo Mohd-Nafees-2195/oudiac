@@ -4,6 +4,7 @@ import com.app.oudiac.dtos.paymentDtos.PaymentUrlDto;
 import com.app.oudiac.exceptions.OrderNotFoundException;
 import com.app.oudiac.exceptions.UserNotFoundException;
 import com.app.oudiac.models.Order;
+import com.app.oudiac.models.OrderHistory;
 import com.app.oudiac.models.Payment;
 import com.app.oudiac.models.User;
 import com.app.oudiac.models.enums.OrderStatus;
@@ -12,6 +13,7 @@ import com.app.oudiac.models.enums.PaymentMethod;
 import com.app.oudiac.models.enums.PaymentStatus;
 import com.app.oudiac.payments.adapter.PaymentGatewayAdapter;
 import com.app.oudiac.payments.adapter.PaymentGatewayAdapterFactory;
+import com.app.oudiac.repositories.OrderHistoryRepository;
 import com.app.oudiac.repositories.OrderRepository;
 import com.app.oudiac.repositories.UserRepository;
 import com.razorpay.Utils;
@@ -24,10 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +35,7 @@ public class PaymentService {
     private final PaymentGatewayAdapterFactory paymentGatewayAdapterFactory;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final OrderHistoryRepository orderHistoryRepository;
 
     // This is a NEW secret specifically for webhooks.
     // You will generate this in the Razorpay Dashboard.
@@ -122,7 +122,7 @@ public class PaymentService {
                 System.out.println("Processing Success for Order: " + orderId);
                 // TODO: Update your database order status to "PAID"
 
-                UpdateDbOrder(orderId,paymentId,PaymentStatus.SUCCESS,paymentMethod,OrderStatus.CONFIRMED);
+                UpdateDbOrder(orderId,paymentId,PaymentStatus.SUCCESS,paymentMethod,OrderStatus.CONFIRMED,"Payment Confirmed");
 
             } else if ("payment.failed".equals(event)) {
 
@@ -136,7 +136,7 @@ public class PaymentService {
                 String paymentId = paymentEntity.getString("id");
                 String paymentMethod = paymentEntity.getString("method");
                 // TODO: Update your database order status to "FAILED"
-                UpdateDbOrder(orderId,paymentId,PaymentStatus.FAILED,paymentMethod,OrderStatus.CANCELLED);
+                UpdateDbOrder(orderId,paymentId,PaymentStatus.FAILED,paymentMethod,OrderStatus.PAYMENT_FAILED,"Payment Failed");
             }
 
             // Razorpay expects a 200 OK response, otherwise it will keep retrying the webhook
@@ -147,7 +147,7 @@ public class PaymentService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    private void UpdateDbOrder(String orderId,String paymentId,PaymentStatus paymentStatus, String paymentMethod,OrderStatus orderStatus) throws Exception {
+    private void UpdateDbOrder(String orderId,String paymentId,PaymentStatus paymentStatus, String paymentMethod,OrderStatus orderStatus,String title) throws Exception {
         Optional<Order> dbOrder=orderRepository.findByOrderId(orderId);
         if(dbOrder.isEmpty()){
             throw new OrderNotFoundException("Order Not Found");
@@ -160,6 +160,19 @@ public class PaymentService {
             payment.setPaymentMethod(PaymentMethod.fromString(paymentMethod));
             payment.setStatus(paymentStatus);
         }
+        // ==========================================
+        // 📌 Update History Status
+        // ==========================================
+        OrderHistory newOrderHistory=new OrderHistory();
+        newOrderHistory.setStatus(orderStatus);
+        newOrderHistory.setChangedBy("WEBHOOK");
+        newOrderHistory.setTitle(title);
+//        newOrderHistory.setChangedByUserId(user.getId());
+        newOrderHistory.setOrder(dbOrder.get());
+        newOrderHistory.setCreated_at(new Date());
+        newOrderHistory.setUpdated_at(new Date());
+
         orderRepository.save(dbOrder.get());
+        orderHistoryRepository.save(newOrderHistory);
     }
 }

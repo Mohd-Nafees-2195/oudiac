@@ -41,6 +41,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final AddressRepository addressRepository;
     private final PaymentGatewayAdapterFactory paymentGatewayAdapterFactory;
+    private final OrderHistoryRepository orderHistoryRepository;
 
     @Transactional
     public ResponseEntity<OrderResponseDto> placeOrder(OrderRequestDto request, String username, String  idempotencyKey,String adapter,String currency) throws Exception {
@@ -165,7 +166,20 @@ public class OrderService {
         payments.add(payment);
         newOrder.setPayments(payments);
 
+        // ==========================================
+        // 📌 Create History with PENDING Status
+        // ==========================================
+        OrderHistory newOrderHistory=new OrderHistory();
+        newOrderHistory.setStatus(OrderStatus.PENDING);
+        newOrderHistory.setChangedBy("CUSTOMER");
+        newOrderHistory.setTitle("Order Placed");
+        newOrderHistory.setChangedByUserId(user.getId());
+        newOrderHistory.setOrder(newOrder);
+        newOrderHistory.setCreated_at(new Date());
+        newOrderHistory.setUpdated_at(new Date());
+
          orderRepository.save(newOrder);  //create order repo
+         orderHistoryRepository.save(newOrderHistory);
          System.out.println("Order Created with order number :: "+newOrder.getOrderId());
 
         OrderResponseDto response=OrderResponseDto.from(newOrder);
