@@ -3,6 +3,7 @@ package com.app.oudiac.controllers;
 import com.app.oudiac.dtos.OrderDtos.OrderRequestDto;
 import com.app.oudiac.dtos.OrderDtos.OrderResponseDto;
 import com.app.oudiac.models.User;
+import com.app.oudiac.models.enums.OrderStatus;
 import com.app.oudiac.services.orderService.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,5 +68,12 @@ public class OrderController {
                                             Principal principal) {
         return orderService.getCurrDayOrders(page,size,principal);
     }
+
+
+    @PutMapping("/manager/order-update/{id}/{newStatus}/{title}")
+    public ResponseEntity<OrderResponseDto> updateOrder(@PathVariable Long id, @PathVariable OrderStatus newStatus,@PathVariable String title, Principal principal) {
+        return orderService.updateOrder(id,newStatus,title,principal);
+    }
+
 
 }

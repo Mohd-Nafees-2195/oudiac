@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +27,12 @@ public class OrderHistoryService {
 
         List<OrderHistory> orderHistories=orderHistoryRepository.findByOrderId(orderId);
         List<OrderHistoryResDto> resDtos=new ArrayList<>();
+        Set<String> set=new HashSet<>();
         for(OrderHistory orderHistory:orderHistories){
-            resDtos.add(OrderHistoryResDto.fromOrderHistory(orderHistory));
+            if(!set.contains(orderHistory.getStatus().toString())){
+                resDtos.add(OrderHistoryResDto.fromOrderHistory(orderHistory));
+                set.add(orderHistory.getStatus().toString());
+            }
         }
         return new ResponseEntity<>(resDtos, HttpStatus.OK);
     }

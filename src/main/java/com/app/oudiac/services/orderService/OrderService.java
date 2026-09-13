@@ -14,6 +14,7 @@ import com.app.oudiac.payments.adapter.PaymentGatewayAdapter;
 import com.app.oudiac.payments.adapter.PaymentGatewayAdapterFactory;
 import com.app.oudiac.repositories.*;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -36,12 +37,14 @@ public class OrderService {
     private final ProductVariantRepository productVariantRepository;
 
     private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final AddressRepository addressRepository;
     private final PaymentGatewayAdapterFactory paymentGatewayAdapterFactory;
     private final OrderHistoryRepository orderHistoryRepository;
+    private final OrderChargesRepository orderChargesRepository;
 
     @Transactional
     public ResponseEntity<OrderResponseDto> placeOrder(OrderRequestDto request, String username, String  idempotencyKey,String adapter,String currency) throws Exception {
@@ -53,6 +56,10 @@ public class OrderService {
         Optional<Order> ordered = orderRepository.findByIdempotencyKey(idempotencyKey);
         if(ordered.isPresent()) {
             throw new ItemAlreadyExitException("Order already exists");
+        }
+        OrderCharges orderCharges=orderChargesRepository.getCharges(false);
+        if(orderCharges==null){
+            throw new ItemNotFoundException("Charges Not Found");
         }
 
         Order newOrder = new Order();
@@ -70,7 +77,6 @@ public class OrderService {
                 throw new ItemNotFoundException("Product not found");
             }
 
-//            List<Store> stores=product.get().getStores();
             //Filter varient
             ProductVariant productVariant = product.get().getProductVariants()
                     .stream()
@@ -78,17 +84,12 @@ public class OrderService {
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Variant ID does not belong to this product!"));
 
-//            ProductVariant productVariant = productVariantRepository.findById(itemDTO.getVariantId())
-//                    .orElseThrow(() -> new RuntimeException("Product Variant not found"));
-
-
             OrderItem item = new OrderItem();
             item.setUrl(product.get().getImageUrl());
             item.setProductVariant(productVariant);
             item.setQuantity(itemDTO.getQuantity());
 
             BigDecimal price = productVariant.getSellingPrice(); // always from DB
-//            System.out.println("Selling Price : "+price);
             item.setUnitPrice(price);
             item.setVariantType(productVariant.getVariantType());
             item.setProductName(product.get().getName());
@@ -99,25 +100,36 @@ public class OrderService {
             orderItems.add(item);
         }
         newOrder.setItems(orderItems);
-//        System.out.println("Total Price : "+totalAmount);
+
+        // ==========================================
+        // 📌 Calculate Pricing with discount and gst
+        // ==========================================
+
         newOrder.setSubTotal(subtotalAmount);
-        BigDecimal taxRate = new BigDecimal("0.18");
-        BigDecimal taxAmount = subtotalAmount.multiply(taxRate)
+
+        /** Calculating discount */
+        BigDecimal discount=new BigDecimal(0); // Amount Rs=0 For now, later calculate via coupon code
+        newOrder.setDiscount(discount);
+
+        /** Calculating Shipping Fee*/
+        BigDecimal shippingFee;
+        // .compareTo returns 1 if subTotal is greater than 2000
+        if (subtotalAmount.compareTo(orderCharges.getFreeShippingThreshold()) >= 0) {
+            shippingFee = BigDecimal.ZERO; // Free shipping!
+        } else {
+            shippingFee = orderCharges.getShippingFee();
+        }
+        newOrder.setShippingFee(shippingFee);
+        BigDecimal taxableAmount=subtotalAmount.subtract(discount).add(shippingFee);
+
+        BigDecimal taxRate = orderCharges.getGst().divide(BigDecimal.valueOf(100));
+        BigDecimal taxAmount = taxableAmount.multiply(taxRate)
                 .setScale(2, RoundingMode.HALF_UP); // Rounds to 2 decimal places
         newOrder.setTaxAmount(taxAmount);
 
-        BigDecimal freeShippingThreshold = new BigDecimal("2000.00");
-        BigDecimal shippingFee;
-        // .compareTo returns 1 if subTotal is greater than 2000
-        if (subtotalAmount.compareTo(freeShippingThreshold) >= 0) {
-            shippingFee = BigDecimal.ZERO; // Free shipping!
-        } else {
-            shippingFee = new BigDecimal("100.00"); // Standard ₹100 fee
-        }
-        newOrder.setShippingFee(shippingFee);
 
         // 4. Calculate Final Total (SubTotal + Tax + Shipping)
-        BigDecimal totalAmount = subtotalAmount.add(taxAmount).add(shippingFee);
+        BigDecimal totalAmount = taxableAmount.add(taxAmount);
         newOrder.setTotalAmount(totalAmount);
 
         // ==========================================
@@ -132,6 +144,8 @@ public class OrderService {
         newOrder.setShippingPincode(address.get().getPinCode());
         newOrder.setShippingPhone(address.get().getPhoneNumber());
         newOrder.setShippingName(address.get().getFullName());
+        newOrder.setShippingState(address.get().getState());
+        newOrder.setCountry(address.get().getCountry());
 
         newOrder.setStatus(OrderStatus.PENDING);
         newOrder.setPaymentStatus(PaymentStatus.PENDING);
@@ -235,5 +249,32 @@ public class OrderService {
 
         Page<Order> orders=orderRepository.findCurrDayOrders(startOfDay,startOfNextDay,PageRequest.of(page, size));
         return orders.map(OrderResponseDto::from);
+    }
+
+    public ResponseEntity<OrderResponseDto> updateOrder(Long orderId,OrderStatus newStatus,String title,Principal principal) {
+        Optional<Admin> user=adminRepository.findByEmail(principal.getName());
+        if(user.isEmpty()){
+            throw new UserNotFoundException("User not found");
+        }
+        Optional<Order> order=orderRepository.findById(orderId);
+        if(order.isEmpty()){
+            throw new InvalidOrderException("Invalid Order");
+        }
+        order.get().setStatus(newStatus);
+
+        //Create new History
+        OrderHistory newOrderHistory=new OrderHistory();
+        newOrderHistory.setStatus(newStatus);
+        newOrderHistory.setChangedBy(user.get().getRole().toString().toUpperCase());
+        newOrderHistory.setTitle(title);
+        newOrderHistory.setChangedByUserId(user.get().getId());
+        newOrderHistory.setOrder(order.get());
+        newOrderHistory.setCreated_at(new Date());
+        newOrderHistory.setUpdated_at(new Date());
+
+        orderRepository.save(order.get());
+        orderHistoryRepository.save(newOrderHistory);
+        OrderResponseDto response=OrderResponseDto.from(order.get());
+        return new ResponseEntity<>(response,HttpStatus.OK);
     }
 }

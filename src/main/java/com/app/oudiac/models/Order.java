@@ -50,6 +50,9 @@ public class Order extends BaseModel {
     private BigDecimal shippingFee;
 
     @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal discount;
+
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal taxAmount;
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -70,8 +73,12 @@ public class Order extends BaseModel {
     @Column(nullable = false)
     private String shippingCity;
 
+//    @Column(nullable = false)
+    private String shippingState;
+
     @Column(nullable = false)
     private String shippingPincode;
+    private String country;
 
     // ==========================================
     // 📌 LIFECYCLE & TRACKING
